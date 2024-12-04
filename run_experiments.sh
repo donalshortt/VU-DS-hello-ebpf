@@ -29,7 +29,7 @@ run_experiment()
 	# find mem usage
 	echo "LOOOOOOOOOOOOOOOOOOOOOOKK"
 	echo "REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
-	cat $1_bench_results.json | jq '[.data."finagle-http".results[].duration_ns] | add / length' | echo
+	jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results.json"
 
 	
 	# do other stuff
