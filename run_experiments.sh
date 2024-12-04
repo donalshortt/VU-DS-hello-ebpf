@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # HOST refers to the default kernel scheduler
 default_schedulers=("HOST" "SampleScheduler")
