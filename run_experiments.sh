@@ -34,7 +34,7 @@ run_experiment()
 	# grab the average time taken from each repitition
 	echo "Average time taken for $DEFUALT_BENCH with $1 scheduler:" >> $1_bench_results.txt
 	echo "Nanoseconds:" >> $1_bench_results.txt
-	NANOSECS=$(jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results.json")
+	NANOSECS=$(jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results_raw.json")
 	echo $NANOSECS >> $1_bench_results.txt
 	echo "Seconds:" >> $1_bench_results.txt
 	echo "${NANOSECS} / 1000000000" | awk '{printf "%.9f\n", $1 / $2}' >> $1_bench_results.txt
