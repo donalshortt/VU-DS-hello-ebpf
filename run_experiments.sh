@@ -37,7 +37,7 @@ run_experiment()
 	NANOSECS=$(jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results.json")
 	echo $NANOSECS >> $1_bench_results.txt
 	echo "Seconds:" >> $1_bench_results.txt
-	echo $($NANOSECS / 1000000000) >> $1_bench_results.txt
+	echo $(expr ${NANOSECS} / 1000000000) >> $1_bench_results.txt
 	echo >> $1_bench_results.txt
 
 	# grab the average mem usage for each repitition
