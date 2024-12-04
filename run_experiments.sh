@@ -21,8 +21,7 @@ run_experiment()
 	fi
 	
 	# Run the benchmark
-	time java -jar renaissance-gpl-0.16.0.jar finagle-http --json $1_bench_results.txt.2 -r 1
-	grep -E "Elapsed|Maximum resident set size|Percent of CPU" $1_bench_results.txt
+	time java -jar renaissance-gpl-0.16.0.jar finagle-http --json $1_bench_results.json -r 1
 	
 	
 
