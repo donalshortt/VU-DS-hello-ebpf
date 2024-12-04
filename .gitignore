@@ -401,3 +401,4 @@ kprobe*
 vmlinux*
 **/jextract-*
 .bpf.compile.cache
+*_bench_results*
