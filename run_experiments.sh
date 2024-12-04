@@ -27,6 +27,8 @@ run_experiment()
 	
 	# grab the aveage time taken from each repitition
 	# find mem usage
+	echo "LOOOOOOOOOOOOOOOOOOOOOOKK"
+	echo "REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
 	cat $1_bench_results.json | jq '[.data."finagle-http".results[].duration_ns] | add / length' | echo
 
 	
@@ -35,6 +37,13 @@ run_experiment()
 		echo "Killing scheduler..."
 		kill $SCHED_PID
 	fi
+}
+
+clean_up()
+{
+	for scheduler in "${default_schedulers[@]}"; do
+		rm -f $scheduler_bench_results.json
+	done
 }
 
 check_if_benchmark_downloaded()
@@ -99,6 +108,7 @@ main()
     done
     shift "$((OPTIND - 1))"
 
+	clean_up
 	check_if_sudo
 	check_if_ebpf
 	check_if_benchmark_downloaded
