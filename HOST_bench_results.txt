@@ -1,0 +1,14 @@
+Average time taken for finagle-http with HOST scheduler:
+Nanoseconds:
+
+Seconds:
+/ 1000000000
+
+Average memory usage for finagle-http with HOST scheduler:
+Average time taken for finagle-http with HOST scheduler:
+Nanoseconds:
+
+Seconds:
+
+
+Average memory usage for finagle-http with HOST scheduler:

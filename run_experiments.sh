@@ -37,7 +37,7 @@ run_experiment()
 	NANOSECS=$(jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results.json")
 	echo $NANOSECS >> $1_bench_results.txt
 	echo "Seconds:" >> $1_bench_results.txt
-	echo $NANOSECS / 1000000000 >> $1_bench_results.txt
+	echo $($NANOSECS / 1000000000) >> $1_bench_results.txt
 	echo >> $1_bench_results.txt
 
 	# grab the average mem usage for each repitition
@@ -55,8 +55,10 @@ run_experiment()
 clean_up()
 {
 	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
-		rm -f "$scheduler_bench_results_raw.json"
-		rm -f "$scheduler_bench_results.txt"
+		echo "deleting!"
+		echo "$scheduler"
+		rm "$scheduler_bench_results_raw.json"
+		rm "$scheduler_bench_results.txt"
 	done
 }
 
