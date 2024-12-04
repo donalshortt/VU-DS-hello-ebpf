@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 
 # HOST refers to the default kernel scheduler
-default_schedulers=("HOST" "SampleScheduler")
+DEFAULT_SCHEDULERS=("HOST" "SampleScheduler")
+DEFUALT_REPS=1
+DEFUALT_BENCH="finagle-http"
 
 usage()
 {
     echo "Run me as root and in the hello-ebpf repo"
+	echo "WARNING: I will clear the logs of any previous runs!"
 }
 
 run_experiment()
 {
-	echo "Running experiment... "
-	echo "With scheduler: $1"
+	echo "############################"
+	echo "# Running experiment...    "
+	echo "# With scheduler: $1		 "
+	echo "# With reps: $DEFUALT_REPS "
+	echo "############################"
 
 	# Run the scheduler
 	if [ "$1" != "HOST" ]; then
@@ -21,15 +27,21 @@ run_experiment()
 		check_if_scheduler_enabled
 	fi
 	
-	# Run the benchmark
-	time java -jar renaissance-gpl-0.16.0.jar finagle-http --json $1_bench_results.json -r 1
+	# run the benchmark
+	time java -jar renaissance-gpl-0.16.0.jar $DEFUALT_BENCH --json $1_bench_results_raw.json -r $DEFUALT_REPS
 
 	
-	# grab the aveage time taken from each repitition
-	# find mem usage
-	echo "LOOOOOOOOOOOOOOOOOOOOOOKK"
-	echo "REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
-	jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results.json"
+	# grab the average time taken from each repitition
+	echo "Average time taken for $DEFUALT_BENCH with $1 scheduler:" >> $1_bench_results.txt
+	echo "Nanoseconds:" >> $1_bench_results.txt
+	NANOSECS = jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results.json" >> $1_bench_results.txt
+	echo "Seconds:" >> $1_bench_results.txt
+	echo $NANOSECS / 1000000000 >> $1_bench_results.txt
+	echo >> $1_bench_results.txt
+
+	# grab the average mem usage for each repitition
+	echo "Average memory usage for $DEFUALT_BENCH with $1 scheduler:" >> $1_bench_results.txt
+
 
 	
 	# do other stuff
@@ -41,8 +53,9 @@ run_experiment()
 
 clean_up()
 {
-	for scheduler in "${default_schedulers[@]}"; do
-		rm -f $scheduler_bench_results.json
+	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
+		rm -f $scheduler_bench_results_raw.json
+		rm -f $scheduler_bench_results.txt
 	done
 }
 
@@ -88,9 +101,7 @@ check_if_scheduler_enabled()
 {
 	output=$(cat /sys/kernel/sched_ext/state /sys/kernel/sched_ext/*/ops 2>/dev/null)
 
-	if echo "$output" | head -n 1 | grep -q "enabled"; then
-		echo "Custom scheduler enabled!"
-	else
+	if ! echo "$output" | head -n 1 | grep -q "enabled"; then
 		echo "ERROR: Enabling custom scheduler failed!"
 		exit 1
 	fi
@@ -113,7 +124,7 @@ main()
 	check_if_ebpf
 	check_if_benchmark_downloaded
 	
-	for scheduler in "${default_schedulers[@]}"; do
+	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
 		run_experiment $scheduler
 	done
 }
