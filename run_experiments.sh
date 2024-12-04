@@ -57,7 +57,7 @@ check_if_sudo()
 check_if_ebpf()
 {
 	# Define the expected directory name
-	expected_dirname="hello-ebpf"
+	expected_dirname="VU-DS-hello-ebpf"
 
 	# Get the directory where the script is located
 	actual_dirname=$(basename "$(dirname "$(realpath "$0")")")
