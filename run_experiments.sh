@@ -65,8 +65,6 @@ check_if_benchmark_downloaded()
 
 	script_dir=$(dirname "$(realpath "$0")")
 
-	echo "WEEEE:$script_dir/$file_to_check "
-
 	if [ ! -f "$script_dir/$file_to_check" ]; then
 		echo "The benchmarker '$file_to_check' does NOT exist in the same directory as the script. Downloading..."
 		wget https://github.com/renaissance-benchmarks/renaissance/releases/download/v0.16.0/renaissance-gpl-0.16.0.jar
