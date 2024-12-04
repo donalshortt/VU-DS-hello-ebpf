@@ -10,7 +10,8 @@ usage()
 
 run_experiment()
 {
-	echo "Running experiment..."
+	echo "Running experiment... "
+	echo "With scheduler: $1"
 
 	# Run the scheduler
 	if [ "$1" != "HOST" ]; then
