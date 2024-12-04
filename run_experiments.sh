@@ -27,7 +27,7 @@ run_experiment()
 	
 	# grab the aveage time taken from each repitition
 	# find mem usage
-	cat $1_bench_results | jq '[.data."finagle-http".results[].duration_ns] | add / length' | echo
+	cat $1_bench_results.json | jq '[.data."finagle-http".results[].duration_ns] | add / length' | echo
 
 	
 	# do other stuff
