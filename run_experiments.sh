@@ -25,11 +25,10 @@ run_experiment()
 	time java -jar renaissance-gpl-0.16.0.jar finagle-http --json $1_bench_results.json -r 1
 
 	
-	
+	# grab the aveage time taken from each repitition
+	# find mem usage
+	cat $1_bench_results | jq '[.data."finagle-http".results[].duration_ns] | add / length' | echo
 
-	# change the compiler
-	# collect the et, mem & cpu
-	#
 	
 	# do other stuff
 	if [[ $SCHED_PID != "" ]]; then
