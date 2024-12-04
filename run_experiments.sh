@@ -55,8 +55,8 @@ run_experiment()
 clean_up()
 {
 	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
-		rm -f $scheduler_bench_results_raw.json
-		rm -f $scheduler_bench_results.txt
+		rm -f "$scheduler_bench_results_raw.json"
+		rm -f "$scheduler_bench_results.txt"
 	done
 }
 
