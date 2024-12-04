@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # HOST refers to the default kernel scheduler
 default_schedulers=("HOST" "SampleScheduler")
@@ -15,13 +15,15 @@ run_experiment()
 
 	# Run the scheduler
 	if [ "$1" != "HOST" ]; then
-		./run.sh $1
+		./run.sh $1 &
+		SCHED_PID=$!
 		sleep 1;
 		check_if_scheduler_enabled
 	fi
 	
 	# Run the benchmark
 	time java -jar renaissance-gpl-0.16.0.jar finagle-http --json $1_bench_results.json -r 1
+
 	
 	
 
@@ -29,7 +31,11 @@ run_experiment()
 	# collect the et, mem & cpu
 	#
 	
-
+	# do other stuff
+	if [[ $SCHED_PID != "" ]]; then
+		echo "Killing scheduler..."
+		kill $SCHED_PID
+	fi
 }
 
 check_if_benchmark_downloaded()
@@ -57,7 +63,7 @@ check_if_sudo()
 check_if_ebpf()
 {
 	# Define the expected directory name
-	expected_dirname="VU-DS-hello-ebpf"
+	expected_dirname="hello-ebpf"
 
 	# Get the directory where the script is located
 	actual_dirname=$(basename "$(dirname "$(realpath "$0")")")
