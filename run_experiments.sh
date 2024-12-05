@@ -28,7 +28,7 @@ run_experiment()
 	fi
 	
 	# run the benchmark
-	time -f "CPU USAGE: %P" java -jar renaissance-gpl-0.16.0.jar $DEFUALT_BENCH --json $1_bench_results_raw.json -r $DEFUALT_REPS
+	time -F "CPU USAGE: %P" java -jar renaissance-gpl-0.16.0.jar $DEFUALT_BENCH --json $1_bench_results_raw.json -r $DEFUALT_REPS
 
 	
 	# grab the average time taken from each repitition
