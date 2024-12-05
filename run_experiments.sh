@@ -2,7 +2,7 @@
 
 # HOST refers to the default kernel scheduler
 DEFAULT_SCHEDULERS=("HOST" "SampleScheduler")
-DEFUALT_REPS=1
+DEFUALT_REPS=8
 DEFUALT_BENCH="finagle-http"
 
 usage()
