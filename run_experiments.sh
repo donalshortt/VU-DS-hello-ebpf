@@ -28,41 +28,38 @@ run_experiment()
 	fi
 	
 	# run the benchmark
-	time java -jar renaissance-gpl-0.16.0.jar $DEFUALT_BENCH --json $1_bench_results_raw.json -r $DEFUALT_REPS
+	time -f "CPU USAGE: %P" java -jar renaissance-gpl-0.16.0.jar $DEFUALT_BENCH --json $1_bench_results_raw.json -r $DEFUALT_REPS
 
 	
 	# grab the average time taken from each repitition
 	echo "Average time taken for $DEFUALT_BENCH with $1 scheduler:" >> $1_bench_results.txt
-	echo "	Nanoseconds:" >> $1_bench_results.txt
+	echo "    Nanoseconds:" >> $1_bench_results.txt
 	NANOSECS=$(jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results_raw.json")
-	echo "	$NANOSECS" >> $1_bench_results.txt
-	echo "	Seconds:" >> $1_bench_results.txt
-	echo "${NANOSECS}  1000000000" | awk '{printf "	%.9f\n", $1 / $2}' >> $1_bench_results.txt
+	echo "    $NANOSECS" >> $1_bench_results.txt
+	echo "    Seconds:" >> $1_bench_results.txt
+	echo "${NANOSECS}  1000000000" | awk '{printf "    %.9f\n", $1 / $2}' >> $1_bench_results.txt
 	echo >> $1_bench_results.txt
 
-	# grab the average mem usage for each repitition
-	# i guess i want to grab the total memory used.. heap and non-heap?
-	# Grab memory usage using jq
+	# grab the mem usage for the whole run
 	HEAP_USAGE=$(jq '[.environment.vm.memory.heap_usage.used] | add / length' "$1_bench_results_raw.json")
 	NONHEAP_USAGE=$(jq '[.environment.vm.memory.nonheap_usage.used] | add / length' "$1_bench_results_raw.json")
 
-# Write memory usage to results.txt
 	echo "Average memory usage for $DEFUALT_BENCH with $1 scheduler:" >> "$1_bench_results.txt"
 	echo "    Heap Used (Bytes):" >> "$1_bench_results.txt"
 	echo "    $HEAP_USAGE" >> "$1_bench_results.txt"
 
-	# Optionally, convert bytes to MB for easier readability
 	echo "    Heap Used (MB):" >> "$1_bench_results.txt"
 	echo "$HEAP_USAGE  1048576" | awk '{printf "    %.3f\n", $1 / $2}' >> "$1_bench_results.txt"
 
 	echo "    Non-Heap Used (Bytes):" >> "$1_bench_results.txt"
 	echo "    $NONHEAP_USAGE" >> "$1_bench_results.txt"
 
-	# Optionally, convert bytes to MB for easier readability
 	echo "    Non-Heap Used (MB):" >> "$1_bench_results.txt"
 	echo "$NONHEAP_USAGE  1048576" | awk '{printf "    %.3f\n", $1 / $2}' >> "$1_bench_results.txt"
 
 	echo >> "$1_bench_results.txt"
+
+
 
 
 
@@ -79,6 +76,8 @@ clean_up()
 		rm "${scheduler}_bench_results_raw.json"
 		rm "${scheduler}_bench_results.txt"
 	done
+
+	rm compiled_results.txt
 }
 
 check_if_benchmark_downloaded()
@@ -123,6 +122,7 @@ check_if_scheduler_enabled()
 
 	if ! echo "$output" | head -n 1 | grep -q "enabled"; then
 		echo "ERROR: Enabling custom scheduler failed!"
+		echo "Have you run build.sh?"
 		exit 1
 	fi
 }
@@ -148,9 +148,15 @@ main()
 		run_experiment $scheduler
 	done
 
+	# Compile results
+	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
+		cat "${scheduler}_bench_results.txt" >> compiled_results.txt
+	done
+
 	echo "Experiment complete!"
 	echo "Raw data saved in *_bench_results_raw.json"
 	echo "Processed data saved in *_bench_results.txt"
+	echo "Results compiled in compiled_results.txt"
 }
 
 main "${@}"
