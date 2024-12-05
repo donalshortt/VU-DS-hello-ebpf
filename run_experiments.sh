@@ -16,7 +16,7 @@ run_experiment()
 	echo "############################"
 	echo "# Running experiment...    "
 	echo "# With scheduler: $1		 "
-	echo "# With reps: $DEFUALT_REPS "
+	echo "# For $DEFUALT_REPS repititions"
 	echo "############################"
 
 	# Run the scheduler
@@ -33,14 +33,15 @@ run_experiment()
 	
 	# grab the average time taken from each repitition
 	echo "Average time taken for $DEFUALT_BENCH with $1 scheduler:" >> $1_bench_results.txt
-	echo "Nanoseconds:" >> $1_bench_results.txt
+	echo "	Nanoseconds:" >> $1_bench_results.txt
 	NANOSECS=$(jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results_raw.json")
-	echo $NANOSECS >> $1_bench_results.txt
-	echo "Seconds:" >> $1_bench_results.txt
-	echo "${NANOSECS}  1000000000" | awk '{printf "%.9f\n", $1 / $2}' >> $1_bench_results.txt
+	echo "	$NANOSECS" >> $1_bench_results.txt
+	echo "	Seconds:" >> $1_bench_results.txt
+	echo "	${NANOSECS}  1000000000" | awk '{printf "%.9f\n", $1 / $2}' >> $1_bench_results.txt
 	echo >> $1_bench_results.txt
 
 	# grab the average mem usage for each repitition
+	# i guess i want to grab the total memory used.. heap and non-heap?
 	echo "Average memory usage for $DEFUALT_BENCH with $1 scheduler:" >> $1_bench_results.txt
 
 
@@ -126,6 +127,10 @@ main()
 	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
 		run_experiment $scheduler
 	done
+
+	echo "Experiment complete!"
+	echo "Raw data saved in *_bench_results_raw.json"
+	echo "Processed data saved in *_bench_results.txt"
 }
 
 main "${@}"
