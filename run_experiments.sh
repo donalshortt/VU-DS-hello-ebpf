@@ -37,15 +37,35 @@ run_experiment()
 	NANOSECS=$(jq '[.data."finagle-http".results[].duration_ns] | add / length' "$1_bench_results_raw.json")
 	echo "	$NANOSECS" >> $1_bench_results.txt
 	echo "	Seconds:" >> $1_bench_results.txt
-	echo "	${NANOSECS}  1000000000" | awk '{printf "%.9f\n", $1 / $2}' >> $1_bench_results.txt
+	echo "${NANOSECS}  1000000000" | awk '{printf "	%.9f\n", $1 / $2}' >> $1_bench_results.txt
 	echo >> $1_bench_results.txt
 
 	# grab the average mem usage for each repitition
 	# i guess i want to grab the total memory used.. heap and non-heap?
-	echo "Average memory usage for $DEFUALT_BENCH with $1 scheduler:" >> $1_bench_results.txt
+	# Grab memory usage using jq
+	HEAP_USAGE=$(jq '[.environment.vm.memory.heap_usage.used] | add / length' "$1_bench_results_raw.json")
+	NONHEAP_USAGE=$(jq '[.environment.vm.memory.nonheap_usage.used] | add / length' "$1_bench_results_raw.json")
+
+# Write memory usage to results.txt
+	echo "Average memory usage for $DEFUALT_BENCH with $1 scheduler:" >> "$1_bench_results.txt"
+	echo "    Heap Used (Bytes):" >> "$1_bench_results.txt"
+	echo "    $HEAP_USAGE" >> "$1_bench_results.txt"
+
+	# Optionally, convert bytes to MB for easier readability
+	echo "    Heap Used (MB):" >> "$1_bench_results.txt"
+	echo "$HEAP_USAGE  1048576" | awk '{printf "    %.3f\n", $1 / $2}' >> "$1_bench_results.txt"
+
+	echo "    Non-Heap Used (Bytes):" >> "$1_bench_results.txt"
+	echo "    $NONHEAP_USAGE" >> "$1_bench_results.txt"
+
+	# Optionally, convert bytes to MB for easier readability
+	echo "    Non-Heap Used (MB):" >> "$1_bench_results.txt"
+	echo "$NONHEAP_USAGE  1048576" | awk '{printf "    %.3f\n", $1 / $2}' >> "$1_bench_results.txt"
+
+	echo >> "$1_bench_results.txt"
 
 
-	
+
 	# do other stuff
 	if [[ $SCHED_PID != "" ]]; then
 		echo "Killing scheduler..."
@@ -109,21 +129,21 @@ check_if_scheduler_enabled()
 
 main()
 {
-    while getopts ":h" options; do
-        case "${options}" in
-        h)
-            usage
-            exit 0
-            ;;
-        esac
-    done
-    shift "$((OPTIND - 1))"
+	while getopts ":h" options; do
+		case "${options}" in
+			h)
+				usage
+				exit 0
+				;;
+		esac
+	done
+	shift "$((OPTIND - 1))"
 
 	clean_up
 	check_if_sudo
 	check_if_ebpf
 	check_if_benchmark_downloaded
-	
+
 	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
 		run_experiment $scheduler
 	done
