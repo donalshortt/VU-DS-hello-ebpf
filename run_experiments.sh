@@ -33,7 +33,7 @@ run_experiment()
 
 	echo "CPU Usage for scheduler $1:" >> $1_bench_results.txt
 	/usr/bin/time -f "    CPU USAGE: %P" java -jar renaissance-gpl-0.16.0.jar $DEFUALT_BENCH --json $1_bench_results_raw.json -r $DEFUALT_REPS 2>> $1_bench_results.txt
-
+	echo >> $1_bench_results.txt
 	
 	# grab the average time taken from each repitition
 	echo "Average time taken for $DEFUALT_BENCH with $1 scheduler:" >> $1_bench_results.txt

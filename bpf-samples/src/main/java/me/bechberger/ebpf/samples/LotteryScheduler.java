@@ -59,11 +59,8 @@ import static me.bechberger.ebpf.runtime.helpers.BPFHelpers.bpf_get_smp_processo
 import static picocli.CommandLine.Option;
 
 @BPF(license = "GPL")
-@Property(name = "sched_name", value = "sample_scheduler")
-public abstract class SampleScheduler extends BPFProgram implements Scheduler, Runnable {
-
-
-    final GlobalVariable<Boolean> fifo_sched = new GlobalVariable<>(false);
+@Property(name = "sched_name", value = "lottery_scheduler")
+public abstract class LotteryScheduler extends BPFProgram implements Scheduler, Runnable {
 
     final GlobalVariable<@Unsigned Long> vtime_now = new GlobalVariable<>(0L);
 
@@ -299,7 +296,7 @@ public abstract class SampleScheduler extends BPFProgram implements Scheduler, R
     }
 
     public static void main(String[] args) {
-        try (var program = BPFProgram.load(SampleScheduler.class)) {
+        try (var program = BPFProgram.load(LotteryScheduler.class)) {
             new CommandLine(program).execute(args);
         }
     }
