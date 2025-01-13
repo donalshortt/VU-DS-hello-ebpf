@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 # HOST refers to the default kernel scheduler
-DEFAULT_SCHEDULERS=("HOST" "SampleScheduler")
-DEFUALT_REPS=1
+DEFAULT_SCHEDULERS=("HOST" "FIFOScheduler" "WeightedScheduler")
+DEFUALT_REPS=2
 DEFUALT_BENCH="finagle-http"
+BENCHMARK_JAR="renaissance-gpl-0.16.0-7-gd3bb48c.jar"
 
 usage()
 {
@@ -32,7 +33,7 @@ run_experiment()
 	echo "" >> $1_bench_results.txt
 
 	echo "CPU Usage for scheduler $1:" >> $1_bench_results.txt
-	/usr/bin/time -f "    CPU USAGE: %P" java -jar renaissance-gpl-0.16.0.jar $DEFUALT_BENCH --json $1_bench_results_raw.json -r $DEFUALT_REPS 2>> $1_bench_results.txt
+	/usr/bin/time -f "    CPU USAGE: %P" java -jar $BENCHMARK_JAR $DEFUALT_BENCH --json $1_bench_results_raw.json -r $DEFUALT_REPS > $1_bench_jar_output.txt 2>> $1_bench_results.txt
 	echo >> $1_bench_results.txt
 	
 	# grab the average time taken from each repitition
@@ -63,7 +64,27 @@ run_experiment()
 
 	echo >> "$1_bench_results.txt"
 
-	# do other stuff
+	echo "Server cold start time (ms):" >> "$1_bench_results.txt"
+	server_cold_start=$(grep "Server cold start latency" "$1_bench_jar_output.txt" | awk '{print $5}')
+	echo "    $server_cold_start" >> "$1_bench_results.txt"
+
+	echo >> "$1_bench_results.txt"
+
+
+	client_latencies=$(grep "Average client cold start latency" "$1_bench_jar_output.txt" | awk '{print $6}')
+
+	sum=0
+	for latency in $client_latencies; do
+		sum=$(echo "$sum + $latency" | bc -l)
+	done
+	
+	average=$(echo "$sum / $DEFUALT_REPS" | bc -l)
+
+	echo "Average client cold start time (ms):" >> "$1_bench_results.txt"
+	echo "     $average" >> "$1_bench_results.txt"
+	
+	echo >> "$1_bench_results.txt"
+
 	if [[ $SCHED_PID != "" ]]; then
 		echo "Killing scheduler..."
 		kill $SCHED_PID
@@ -72,23 +93,21 @@ run_experiment()
 
 clean_up()
 {
-	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
-		rm "${scheduler}_bench_results_raw.json"
-		rm "${scheduler}_bench_results.txt"
-	done
+	rm *_bench_results_raw.json
+	rm *_bench_results.txt
+	rm *_bench_jar_output.txt
 
 	rm compiled_results.txt
 }
 
 check_if_benchmark_downloaded()
 {
-	file_to_check="renaissance-gpl-0.16.0.jar"
-
 	script_dir=$(dirname "$(realpath "$0")")
 
-	if [ ! -f "$script_dir/$file_to_check" ]; then
-		echo "The benchmarker '$file_to_check' does NOT exist in the same directory as the script. Downloading..."
-		wget https://github.com/renaissance-benchmarks/renaissance/releases/download/v0.16.0/renaissance-gpl-0.16.0.jar
+	if [ ! -f "$script_dir/$BENCHMARK_JAR" ]; then
+		echo "The benchmarker '$BENCHMARK_JAR' does not exist in the same directory as the script!"
+		echo "Compile it and move it here"
+		exit 1
 	fi
 }
 
