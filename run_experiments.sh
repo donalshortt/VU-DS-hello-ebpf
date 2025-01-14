@@ -24,7 +24,7 @@ run_experiment()
 	if [ "$1" != "HOST" ]; then
 		./run.sh $1 &
 		SCHED_PID=$!
-		sleep 1;
+		sleep 5;
 		check_if_scheduler_enabled
 	fi
 	
@@ -86,8 +86,8 @@ run_experiment()
 	echo >> "$1_bench_results.txt"
 
 	if [[ $SCHED_PID != "" ]]; then
-		echo "Killing scheduler..."
-		kill $SCHED_PID
+		echo "Killing scheduler... $SCHED_PID"
+		pkill -P $SCHED_PID
 	fi
 }
 
@@ -106,8 +106,8 @@ check_if_benchmark_downloaded()
 
 	if [ ! -f "$script_dir/$BENCHMARK_JAR" ]; then
 		echo "The benchmarker '$BENCHMARK_JAR' does not exist in the same directory as the script!"
-		echo "Compile it and move it here"
-		exit 1
+		echo "Downloading..."
+		wget https://github.com/donalshortt/VU-DS-hello-ebpf/releases/download/renaissance/renaissance-gpl-0.16.0-7-gd3bb48c.jar 
 	fi
 }
 
