@@ -2,15 +2,76 @@
 
 # HOST refers to the default kernel scheduler
 DEFAULT_SCHEDULERS=("HOST" "FIFOScheduler" "WeightedScheduler" "LotteryScheduler")
-DEFUALT_REPS=2
-DEFUALT_BENCH="finagle-http"
+#DEFAULT_SCHEDULERS=("FooScheduler" "FIFOScheduler")
+DEFUALT_REPS=100
+# DEFUALT_BENCH="finagle-http"
+# DEFUALT_BENCH="finagle-chirper"
 BENCHMARK_JAR="renaissance-gpl-0.16.0-7-gd3bb48c.jar"
+
+set -o pipefail
 
 usage()
 {
     echo "Run me as root and in the hello-ebpf repo"
 	echo "WARNING: I will clear the logs of any previous runs!"
 }
+
+run_experiment2()
+{
+	local sched="$1"
+
+	# Run the scheduler
+	if [ "$sched" != "HOST" ]; then
+		./run.sh "$sched" &
+		SCHED_PID=$!
+		sleep 5;
+		check_if_scheduler_enabled
+	fi
+
+	# Execute x times
+
+
+	for (( i=0; i<DEFUALT_REPS; i++ ))
+	do
+		echo "$i"
+		local outdir=""
+		
+		outdir="output/http/$sched/$i"
+		mkdir -p "$outdir"
+		/usr/bin/time -o "$outdir/time.txt" \
+			-f "real_time: %e \nkernel_cpu: %S \nuser_cpu: %U \ncpu_percentage: %P \nexpired: %c \nwaits: %w " \
+			java -jar $BENCHMARK_JAR "finagle-http" \
+			--json "$outdir/results.json" -r 1
+
+		outdir="output/chirper/$sched/$i"
+		mkdir -p "$outdir"
+		/usr/bin/time -o "$outdir/time.txt" \
+			-f "real_time: %e \nkernel_cpu: %S \nuser_cpu: %U \ncpu_percentage: %P \nexpired: %c \nwaits: %w " \
+			java -jar $BENCHMARK_JAR "finagle-chirper" \
+			--json "$outdir/results.json" -r 1
+		
+		outdir="output/ipctcp/$sched/$i"
+		mkdir -p "$outdir"
+		/usr/bin/time -o "$outdir/time.txt" \
+			-f "real_time: %e \nkernel_cpu: %S \nuser_cpu: %U \ncpu_percentage: %P \nexpired: %c \nwaits: %w " \
+			./ipc-bench/build/source/tcp/tcp -c 100000
+		
+		outdir="output/ipcmq/$sched/$i"
+		mkdir -p "$outdir"
+		/usr/bin/time -o "$outdir/time.txt" \
+			-f "real_time: %e \nkernel_cpu: %S \nuser_cpu: %U \ncpu_percentage: %P \nexpired: %c \nwaits: %w " \
+			./ipc-bench/build/source/mq/mq -c 100000
+
+	done
+
+
+	if [[ $SCHED_PID != "" ]]; then
+		echo "Killing scheduler... $SCHED_PID"
+		pkill -P $SCHED_PID
+	fi
+}
+
+
 
 run_experiment()
 {
@@ -109,6 +170,13 @@ check_if_benchmark_downloaded()
 		echo "Downloading..."
 		wget https://github.com/donalshortt/VU-DS-hello-ebpf/releases/download/renaissance/renaissance-gpl-0.16.0-7-gd3bb48c.jar 
 	fi
+
+	if [ ! -f "$script_dir/ipc-bench/README.md" ]; then
+		echo "ipc-bench missing"
+		echo "Downloading..."
+		wget https://github.com/donalshortt/VU-DS-hello-ebpf/releases/download/renaissance/ipc-bench.tar
+		tar -xvf ipc-bench.tar 
+	fi
 }
 
 check_if_sudo()
@@ -162,19 +230,26 @@ main()
 	check_if_sudo
 	check_if_benchmark_downloaded
 
+	rm -rf ./output
+	mkdir ./output
+
 	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
-		run_experiment $scheduler
+		run_experiment2 $scheduler
 	done
 
-	# Compile results
-	for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
-		cat "${scheduler}_bench_results.txt" >> compiled_results.txt
-	done
+	sudo chown user ./output
 
-	echo "Experiment complete!"
-	echo "Raw data saved in *_bench_results_raw.json"
-	echo "Processed data saved in *_bench_results.txt"
-	echo "Results compiled in compiled_results.txt"
+	tar -cvf output.tar output
+
+	# # Compile results
+	# for scheduler in "${DEFAULT_SCHEDULERS[@]}"; do
+	# 	cat "${scheduler}_bench_results.txt" >> compiled_results.txt
+	# done
+
+	# echo "Experiment complete!"
+	# echo "Raw data saved in *_bench_results_raw.json"
+	# echo "Processed data saved in *_bench_results.txt"
+	# echo "Results compiled in compiled_results.txt"
 }
 
 main "${@}"
